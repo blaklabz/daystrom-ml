@@ -51,6 +51,15 @@ def extract_sable_features(
         and "Generation completed" in event.message
     ]
 
+    memory_evaluation_events = [
+        event
+        for event in events
+        if event.app == "sable"
+        and event.log_type == "memory"
+        and "Background memory processing completed"
+        in event.message
+    ]
+
     if not response_events:
         return None
 
@@ -107,6 +116,9 @@ def extract_sable_features(
             / len(generation_latencies_ms)
             if generation_latencies_ms
             else 0.0
+        ),
+        memory_evaluation_count=len(
+            memory_evaluation_events
         ),
         tool_call_count=tool_call_count,
     )

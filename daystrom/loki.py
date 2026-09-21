@@ -1,6 +1,7 @@
 import os
 
 import httpx
+from daystrom.telemetry import TelemetryEvent
 
 
 DEFAULT_LOKI_URL = "http://loki.blaklabz.io:3100"
@@ -58,3 +59,41 @@ class LokiClient:
             )
 
         return payload
+
+    def query_events(
+        self,
+        query: str,
+        *,
+        start: int | None = None,
+        end: int | None = None,
+        limit: int = 100,
+        direction: str = "backward",
+    ) -> list[TelemetryEvent]:
+        payload = self.query_range(
+            query,
+            start=start,
+            end=end,
+            limit=limit,
+            direction=direction,
+        )
+
+        events = []
+
+        for stream in payload["data"]["result"]:
+            labels = stream["stream"]
+
+            for timestamp_ns, message in stream["values"]:
+                events.append(
+                    TelemetryEvent.from_loki(
+                        labels,
+                        timestamp_ns,
+                        message,
+                    )
+                )
+
+        events.sort(
+            key=lambda event: event.timestamp_ns,
+            reverse=(direction == "backward"),
+        )
+
+        return events

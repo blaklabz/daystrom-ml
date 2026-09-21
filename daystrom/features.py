@@ -1,9 +1,10 @@
 import re
-
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
+
 from daystrom.telemetry import TelemetryEvent
+
 
 @dataclass
 class FeatureWindow:
@@ -25,11 +26,13 @@ class FeatureWindow:
 
     tool_call_count: int = 0
 
+
 ELAPSED_PATTERN = re.compile(r"\belapsed=([0-9.]+)s\b")
 
 
 def extract_sable_features(
     events: list[TelemetryEvent],
+    window_start: datetime,
 ) -> FeatureWindow | None:
     response_events = [
         event
@@ -52,14 +55,9 @@ def extract_sable_features(
                 float(match.group(1)) * 1000
             )
 
-    first_event = min(
-        response_events,
-        key=lambda event: event.timestamp,
-    )
-
     return FeatureWindow(
-        window_start=first_event.timestamp,
-        host=first_event.host or "unknown",
+        window_start=window_start,
+        host=response_events[0].host or "unknown",
         app="sable",
         request_count=len(response_events),
         avg_latency_ms=(
@@ -73,6 +71,7 @@ def extract_sable_features(
             else 0.0
         ),
     )
+
 
 def bucket_events(
     events: list[TelemetryEvent],

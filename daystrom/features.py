@@ -1,6 +1,8 @@
+import re
+
 from dataclasses import dataclass
 from datetime import datetime
-
+from daystrom.telemetry import TelemetryEvent
 
 @dataclass
 class FeatureWindow:
@@ -21,3 +23,52 @@ class FeatureWindow:
     memory_creation_count: int = 0
 
     tool_call_count: int = 0
+
+ELAPSED_PATTERN = re.compile(r"\belapsed=([0-9.]+)s\b")
+
+
+def extract_sable_features(
+    events: list[TelemetryEvent],
+) -> FeatureWindow | None:
+    response_events = [
+        event
+        for event in events
+        if event.app == "sable"
+        and event.log_type == "api"
+        and "Chat response ready" in event.message
+    ]
+
+    if not response_events:
+        return None
+
+    latencies_ms = []
+
+    for event in response_events:
+        match = ELAPSED_PATTERN.search(event.message)
+
+        if match:
+            latencies_ms.append(
+                float(match.group(1)) * 1000
+            )
+
+    first_event = min(
+        response_events,
+        key=lambda event: event.timestamp,
+    )
+
+    return FeatureWindow(
+        window_start=first_event.timestamp,
+        host=first_event.host or "unknown",
+        app="sable",
+        request_count=len(response_events),
+        avg_latency_ms=(
+            sum(latencies_ms) / len(latencies_ms)
+            if latencies_ms
+            else 0.0
+        ),
+        max_latency_ms=(
+            max(latencies_ms)
+            if latencies_ms
+            else 0.0
+        ),
+    )

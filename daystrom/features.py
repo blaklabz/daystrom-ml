@@ -28,6 +28,7 @@ class FeatureWindow:
 
 
 ELAPSED_PATTERN = re.compile(r"\belapsed=([0-9.]+)s\b")
+TOOL_CALLS_PATTERN = re.compile(r"\btool_calls=(\d+)\b")
 
 
 def extract_sable_features(
@@ -42,6 +43,14 @@ def extract_sable_features(
         and "Chat response ready" in event.message
     ]
 
+    generation_events = [
+        event
+        for event in events
+        if event.app == "sable"
+        and event.log_type == "llm"
+        and "Generation completed" in event.message
+    ]
+
     if not response_events:
         return None
 
@@ -53,6 +62,28 @@ def extract_sable_features(
         if match:
             latencies_ms.append(
                 float(match.group(1)) * 1000
+            )
+
+    generation_latencies_ms = []
+    tool_call_count = 0
+
+    for event in generation_events:
+        elapsed_match = ELAPSED_PATTERN.search(
+            event.message
+        )
+
+        if elapsed_match:
+            generation_latencies_ms.append(
+                float(elapsed_match.group(1)) * 1000
+            )
+
+        tool_calls_match = TOOL_CALLS_PATTERN.search(
+            event.message
+        )
+
+        if tool_calls_match:
+            tool_call_count += int(
+                tool_calls_match.group(1)
             )
 
     return FeatureWindow(
@@ -70,6 +101,14 @@ def extract_sable_features(
             if latencies_ms
             else 0.0
         ),
+        llm_generation_count=len(generation_events),
+        avg_generation_ms=(
+            sum(generation_latencies_ms)
+            / len(generation_latencies_ms)
+            if generation_latencies_ms
+            else 0.0
+        ),
+        tool_call_count=tool_call_count,
     )
 
 

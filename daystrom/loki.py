@@ -1,6 +1,8 @@
 import os
 
 import httpx
+
+from datetime import datetime, timedelta, timezone
 from daystrom.telemetry import TelemetryEvent
 
 
@@ -97,3 +99,21 @@ class LokiClient:
         )
 
         return events
+
+    def query_events_since(
+        self,
+        query: str,
+        *,
+        hours: float = 24,
+        limit: int = 5000,
+    ) -> list[TelemetryEvent]:
+        end = datetime.now(timezone.utc)
+        start = end - timedelta(hours=hours)
+
+        return self.query_events(
+            query,
+            start=int(start.timestamp() * 1_000_000_000),
+            end=int(end.timestamp() * 1_000_000_000),
+            limit=limit,
+            direction="forward",
+        )

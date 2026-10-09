@@ -5,7 +5,7 @@ client = LokiClient()
 
 result = client.query_range(
     '{app=~"sable|vesper"}',
-    limit=20,
+    limit=200,
 )
 
 

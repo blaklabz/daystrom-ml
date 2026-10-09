@@ -22,3 +22,7 @@ models/*
 
 # Generated telemetry datasets
 datasets/*.csv
+
+.env
+.env.*
+!.env.example

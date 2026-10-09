@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 
@@ -10,6 +10,9 @@ class TelemetryEvent:
     app: str | None
     log_type: str | None
     message: str
+
+    # Preserve the complete Loki stream identity.
+    labels: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def from_loki(
@@ -30,4 +33,5 @@ class TelemetryEvent:
             app=labels.get("app"),
             log_type=labels.get("log_type"),
             message=message,
+            labels=dict(labels),
         )

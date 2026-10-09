@@ -19,3 +19,6 @@ datasets/*
 !datasets/.gitkeep
 models/*
 !models/.gitkeep
+
+# Generated telemetry datasets
+datasets/*.csv

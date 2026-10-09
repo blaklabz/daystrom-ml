@@ -36,3 +36,19 @@ class ActivityObservation(Base):
     observation_status: Mapped[str] = mapped_column(String(32), nullable=False)
     source: Mapped[Source] = relationship(back_populates='observations')
     __table_args__ = (Index('ix_activity_source_observed', 'source_id', 'observed_at'),)
+
+
+class EventVolumeObservation(Base):
+    """Count of events for a source in a bounded UTC time window."""
+    __tablename__ = "event_volume_observations"
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    source_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    event_count: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    source: Mapped["Source"] = relationship()
+    __table_args__ = (
+        UniqueConstraint("source_id", "window_start", "window_end", name="uq_event_volume_source_window"),
+        Index("ix_event_volume_window_end", "window_end"),
+    )

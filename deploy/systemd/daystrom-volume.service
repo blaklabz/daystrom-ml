@@ -1,0 +1,12 @@
+[Unit]
+Description=Daystrom Loki event-volume collection
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/daystrom/daystrom-ml
+Environment=DAYSTROM_BACKFILL_WINDOWS=12
+ExecStart=/opt/daystrom/.venv/bin/python -m daystrom.event_volume
+TimeoutStartSec=240

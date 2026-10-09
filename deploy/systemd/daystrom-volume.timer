@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Daystrom event-volume collection every five minutes
+
+[Timer]
+OnCalendar=*-*-* *:00/5:30
+Persistent=true
+AccuracySec=1s
+Unit=daystrom-volume.service
+
+[Install]
+WantedBy=timers.target

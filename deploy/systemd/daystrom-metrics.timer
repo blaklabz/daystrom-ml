@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Daystrom node metrics collection every five minutes
+
+[Timer]
+OnCalendar=*-*-* *:00/5:45
+Persistent=true
+AccuracySec=1s
+Unit=daystrom-metrics.service
+
+[Install]
+WantedBy=timers.target

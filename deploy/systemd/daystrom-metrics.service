@@ -1,0 +1,14 @@
+[Unit]
+Description=Daystrom Prometheus curated node metrics
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/daystrom/daystrom-ml
+Environment=DAYSTROM_PROMETHEUS_URL=http://prometheus.blaklabz.io:9090
+Environment=DAYSTROM_METRICS_BACKFILL_WINDOWS=12
+Environment=DAYSTROM_METRICS_RETENTION_DAYS=180
+ExecStart=/opt/daystrom/.venv/bin/python -m daystrom.metrics
+TimeoutStartSec=600

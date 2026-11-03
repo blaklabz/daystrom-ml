@@ -1,7 +1,7 @@
 """Persistent inventory and activity observations."""
 from datetime import datetime
 from typing import Any
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, Integer, Identity, String, UniqueConstraint, func
+from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Index, Integer, Identity, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -51,4 +51,19 @@ class EventVolumeObservation(Base):
     __table_args__ = (
         UniqueConstraint("source_id", "window_start", "window_end", name="uq_event_volume_source_window"),
         Index("ix_event_volume_window_end", "window_end"),
+    )
+
+
+class NodeMetricObservation(Base):
+    """One derived Prometheus measurement per host, metric and UTC window."""
+    __tablename__ = 'node_metric_observations'
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    instance: Mapped[str] = mapped_column(String(256), nullable=False)
+    metric_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    __table_args__ = (
+        UniqueConstraint('instance', 'metric_name', 'window_end', name='uq_node_metric_instance_name_end'),
+        Index('ix_node_metric_window_end', 'window_end'),
     )

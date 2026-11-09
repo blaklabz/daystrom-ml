@@ -1,0 +1,22 @@
+[Unit]
+Description=Daystrom authenticated read-only metrics API
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=daystrom-api
+Group=daystrom-api
+WorkingDirectory=/opt/daystrom/daystrom-ml
+EnvironmentFile=/etc/daystrom/daystrom-api.env
+ExecStart=/opt/daystrom/.venv/bin/uvicorn daystrom.api:app --host 172.16.0.196 --port 8765 --no-access-log
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=
+
+[Install]
+WantedBy=multi-user.target

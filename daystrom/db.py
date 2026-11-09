@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv(Path(__file__).resolve().parents[1] / '.env')
+if not os.getenv("DAYSTROM_DATABASE_URL"):
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def get_engine():
